@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ business.name }}</h1>
+<p>{{ business.description }}</p>
+<p>Manzil: {{ business.location }}</p>
+
+{% if business.image %}
+  <img src="{{ business.image.url }}" alt="{{ business.name }}" style="max-width: 400px;">
+{% endif %}
+
+<h3>Xarita</h3>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<div id="map" style="height: 400px;"></div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  var map = L.map('map').setView([{{ business.latitude|default:"41.3111" }}, {{ business.longitude|default:"69.2797" }}], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+  }).addTo(map);
+  {% if business.latitude and business.longitude %}
+  L.marker([{{ business.latitude }}, {{ business.longitude }}]).addTo(map)
+    .bindPopup('{{ business.name }}')
+    .openPopup();
+  {% endif %}
+</script>
+
+<h3>O‘rtacha reyting: {{ average_rating }} / 5</h3>
+
+{% if user.is_authenticated %}
+<form method="post">
+  {% csrf_token %}
+  {{ rating_form.as_p }}
+  <button name="rating_submit" class="btn btn-warning" type="submit">Reyting berish</button>
+</form>
+{% else %}
+<p><a href="{% url 'login' %}">Kirish</a> orqali reyting berishingiz mumkin.</p>
+{% endif %}
+
+<hr>
+<h3>Kommentlar</h3>
+<ul class="list-group mb-3">
+  {% for comment in comments %}
+  <li class="list-group-item">
+    <strong>{{ comment.author.username }}</strong> - {{ comment.created_at|date:"d M Y H:i" }}<br>
+    {{ comment.text }}
+  </li>
+  {% empty %}
+  <li class="list-group-item">Kommentlar yo‘q.</li>
+  {% endfor %}
+</ul>
+
+{% if user.is_authenticated %}
+<h4>Komment qoldirish</h4>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button name="comment_submit" class="btn btn-primary" type="submit">Jo‘natish</button>
+</form>
+{% else %}
+<p><a href="{% url 'login' %}">Kirish</a> yoki <a href="{% url 'register' %}">Ro‘yxatdan o‘tish</a> orqali komment qoldiring.</p>
+{% endif %}
+
+<hr>
+
+<div id="like-dislike-section" data-business-id="{{ business.id }}">
+    <button id="like-btn" class="btn btn-outline-success">
+        Like (<span id="like-count">{{ total_likes }}</span>)
+    </button>
+    <button id="dislike-btn" class="btn btn-outline-danger">
+        Dislike (<span id="dislike-count">{{ total_dislikes }}</span>)
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const businessId = document.getElementById('like-dislike-section').dataset.businessId;
+    const likeBtn = document.getElementById('like-btn');
+    const dislikeBtn = document.getElementById('dislike-btn');
+    const likeCount = document.getElementById('like-count');
+    const dislikeCount = document.getElementById('dislike-count');
+
+    function sendLike(value) {
+        fetch("{% url 'business_like_toggle' business.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `value=${value}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                likeCount.textContent = data.total_likes;
+                dislikeCount.textContent = data.total_dislikes;
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(() => alert("Xatolik yuz berdi, iltimos qayta urinib ko‘ring."));
+    }
+
+    likeBtn.addEventListener('click', () => sendLike(1));
+    dislikeBtn.addEventListener('click', () => sendLike(-1));
+});
+</script>
+{% endblock %}

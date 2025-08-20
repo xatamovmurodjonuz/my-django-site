@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ business.name }} uchun Premium aktivatsiyasi</h1>
+<p>Premium obuna narxi: $50</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-success" type="submit">To‘lovni amalga oshirish</button>
+</form>
+
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}

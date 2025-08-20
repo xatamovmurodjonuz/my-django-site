@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Bizneslar{% endblock %}
+
+{% block content %}
+<h1>Bizneslar ro‘yxati</h1>
+<a href="{% url 'business_create' %}" class="btn btn-success mb-3">Yangi biznes qo‘shish</a>
+
+<form method="get" class="mb-4">
+  <div class="row g-3 align-items-center">
+    <div class="col-md-3">
+      <select name="category" class="form-select">
+        <option value="">— Kategoriya —</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == selected_category %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-5">
+      <div class="d-flex flex-wrap">
+        {% for tag in tags %}
+          <div class="form-check me-3">
+            <input class="form-check-input" type="checkbox" name="tags" value="{{ tag.id }}"
+              id="tag{{ tag.id }}"
+              {% if tag.id in selected_tags %}checked{% endif %}>
+            <label class="form-check-label" for="tag{{ tag.id }}">{{ tag.name }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Qidirish..." class="form-control">
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-primary" type="submit">Filtrlash</button>
+    </div>
+  </div>
+</form>
+
+<ul class="list-group">
+  {% for biz in businesses %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <a href="{% url 'business_detail' biz.pk %}">{{ biz.name }}</a>
+      {% if biz.is_premium %}
+        <span class="badge bg-warning text-dark">Premium</span>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li class="list-group-item">Bizneslar topilmadi.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

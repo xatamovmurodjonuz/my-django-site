@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Qidiruv natijalari{% if query %} uchun: "{{ query }}"{% endif %}</h2>
+
+<form method="get" action="{% url 'business_search' %}">
+  <input type="text" name="q" value="{{ query }}" placeholder="Biznes qidirish..." class="form-control mb-3" />
+  <button class="btn btn-primary" type="submit">Qidirish</button>
+</form>
+
+<ul class="list-group">
+  {% for biz in businesses %}
+  <li class="list-group-item">
+    <a href="{% url 'business_detail' biz.pk %}">{{ biz.name }}</a>
+  </li>
+  {% empty %}
+  <li class="list-group-item">Biznes topilmadi.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
